@@ -25,20 +25,67 @@
 /* TODO: Implement MMIO control register read */
 static uint64_t gpgpu_ctrl_read(void *opaque, hwaddr addr, unsigned size)
 {
-    (void)opaque;
-    (void)addr;
-    (void)size;
-    return 0;
+    GPGPUState *s = opaque;
+
+    switch (addr) {
+    case GPGPU_REG_DEV_ID:
+        return GPGPU_DEV_ID_VALUE;
+    case GPGPU_REG_DEV_VERSION:
+        return GPGPU_DEV_VERSION_VALUE;
+    case GPGPU_REG_VRAM_SIZE_LO:
+        return (uint32_t)(s->vram_size & 0xFFFFFFFF);
+    case GPGPU_REG_VRAM_SIZE_HI:
+        return (uint32_t)(s->vram_size>>32);
+    case GPGPU_REG_GLOBAL_CTRL:
+        return s->global_ctrl;
+    case GPGPU_REG_GLOBAL_STATUS:
+        return s->global_status;
+    case GPGPU_REG_GRID_DIM_X:
+        return s->kernel.grid_dim[0];
+    case GPGPU_REG_GRID_DIM_Y:
+        return s->kernel.grid_dim[1];
+    case GPGPU_REG_GRID_DIM_Z:
+        return s->kernel.grid_dim[2];
+    case GPGPU_REG_BLOCK_DIM_X:
+        return s->kernel.block_dim[0];
+    case GPGPU_REG_BLOCK_DIM_Y:
+        return s->kernel.block_dim[1];
+    case GPGPU_REG_BLOCK_DIM_Z:
+        return s->kernel.block_dim[2];
+    default:
+        return 0;
+    }
 }
 
 /* TODO: Implement MMIO control register write */
 static void gpgpu_ctrl_write(void *opaque, hwaddr addr, uint64_t val,
                              unsigned size)
 {
-    (void)opaque;
-    (void)addr;
-    (void)val;
-    (void)size;
+    GPGPUState *s = opaque;
+
+     switch(addr){
+        case GPGPU_REG_GLOBAL_CTRL:
+            s->global_ctrl = val;
+            break;
+        case GPGPU_REG_GRID_DIM_X:
+            s->kernel.grid_dim[0] = val;
+            break;
+        case GPGPU_REG_GRID_DIM_Y:
+            s->kernel.grid_dim[1] = val;
+            break;
+        case GPGPU_REG_GRID_DIM_Z:
+            s->kernel.grid_dim[2] = val;
+            break;
+        case GPGPU_REG_BLOCK_DIM_X:
+            s->kernel.block_dim[0] = val;
+            break;
+        case GPGPU_REG_BLOCK_DIM_Y:
+            s->kernel.block_dim[1] = val;
+            break;
+        case GPGPU_REG_BLOCK_DIM_Z:
+            s->kernel.block_dim[2] = val;
+            break;
+    }
 }
 
 static const MemoryRegionOps gpgpu_ctrl_ops = {
@@ -54,20 +101,18 @@ static const MemoryRegionOps gpgpu_ctrl_ops = {
 /* TODO: Implement VRAM read */
 static uint64_t gpgpu_vram_read(void *opaque, hwaddr addr, unsigned size)
 {
-    (void)opaque;
-    (void)addr;
-    (void)size;
-    return 0;
+    GPGPUState* s = opaque;
+    uint64_t val = 0;
+    memcpy(&val , s->vram_ptr +addr ,size);
+    return val;
 }
 
 /* TODO: Implement VRAM write */
 static void gpgpu_vram_write(void *opaque, hwaddr addr, uint64_t val,
                              unsigned size)
 {
-    (void)opaque;
-    (void)addr;
-    (void)val;
-    (void)size;
+    GPGPUState* s =opaque;
+    memcpy(s->vram_ptr+addr,&val,size);
 }
 
 static const MemoryRegionOps gpgpu_vram_ops = {
